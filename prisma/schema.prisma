@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String
+  role         String
+  organisation String?
+  district     String
+  state        String
+  createdAt    DateTime @default(now())
+
+  instruments      Instrument[]
+  assignments      Application[] @relation("AssignedOfficer")
+  inspections      Inspection[]
+  auditLogs        AuditLog[]
+}
+
+model Instrument {
+  id            String    @id @default(cuid())
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id])
+  category      String
+  accuracyClass String
+  serialNumber  String
+  make          String
+  model         String
+  capacity      String
+  premisesName  String
+  address       String
+  district      String
+  lat           Float
+  lng           Float
+  status        String    @default("UNVERIFIED")
+  lastVerifiedAt DateTime?
+  validUntil     DateTime?
+  createdAt      DateTime @default(now())
+
+  applications Application[]
+  certificates Certificate[]
+}
+
+model Application {
+  id           String    @id @default(cuid())
+  applicationNo String   @unique
+  instrumentId String
+  instrument   Instrument @relation(fields: [instrumentId], references: [id])
+  type         String
+  status       String    @default("SUBMITTED")
+  feeAmount    Int
+  assignedToId String?
+  assignedTo   User?     @relation("AssignedOfficer", fields: [assignedToId], references: [id])
+  assignedKind String?
+  scheduledAt  DateTime?
+  remarks      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  inspection Inspection?
+  certificate Certificate?
+}
+
+model Inspection {
+  id                   String   @id @default(cuid())
+  applicationId        String   @unique
+  application          Application @relation(fields: [applicationId], references: [id])
+  officerId            String
+  officer              User     @relation(fields: [officerId], references: [id])
+  result               String
+  standardUsed         String
+  maxPermissibleError  String
+  observedError        String
+  notes                String
+  photoPath            String?
+  lat                  Float
+  lng                  Float
+  inspectedAt          DateTime @default(now())
+}
+
+model Certificate {
+  id            String   @id @default(cuid())
+  certificateNo String   @unique
+  applicationId String   @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  instrumentId  String
+  instrument    Instrument @relation(fields: [instrumentId], references: [id])
+  issuedAt      DateTime @default(now())
+  validUntil    DateTime
+  integrityHash String
+  qrPayload     String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  detail    String
+  createdAt DateTime @default(now())
+}

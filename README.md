@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MaapSetu — Legal Metrology verification (SIH 2026)
 
-## Getting Started
+Prototype for **SIH26036**: online verification, digital stamping and lifecycle management of weighing and measuring instruments.
 
-First, run the development server:
+This is a last-mile workflow app for traders, Legal Metrology Officers (LMOs), Government Approved Test Centres (GATCs), state administrators, and the public. It is designed to sit beside the national [e-Maap](https://emaap.gov.in/) portal, not replace licences, model approval or packaged-commodity registration.
+
+## Run locally
 
 ```bash
+cd maapsetu
+npm install
+npx prisma migrate dev --name init
+npx prisma db seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role | Email | Password |
+| --- | --- | --- |
+| Trader | shop@maapsetu.gov.in | Shop@123 |
+| LMO | lmo@maapsetu.gov.in | Lmo@123 |
+| GATC | gatc@maapsetu.gov.in | Gatc@123 |
+| Admin | admin@maapsetu.gov.in | Admin@123 |
 
-## Learn More
+Public verify (no login): `VC/TS/HYD/2025/00011`
 
-To learn more about Next.js, take a look at the following resources:
+## What works in this prototype
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Role-based login and trader self-registration
+- Instrument register (shop scale, weighbridge, fuel dispenser)
+- Verification / re-verification applications with demo fee
+- Admin assignment and auto-assign (weighbridge → GATC, others → LMO)
+- Field inspection with photo, GPS, MPE vs observed error
+- Auto-issued QR verification certificate and SHA-256 integrity hash
+- Public certificate check and print view
+- Pendency / expiry dashboards and a failed-inspection enforcement note
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stack
 
-## Deploy on Vercel
+Next.js (App Router), Prisma, SQLite, JWT cookies, Tailwind CSS v4.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `docs/ARCHITECTURE.md` for security and deployment notes.

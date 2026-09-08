@@ -1,0 +1,70 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { StatusBadge } from "@/components/public";
+import { ApplyButton } from "@/components/forms";
+import { daysUntil, formatDate } from "@/lib/utils";
+
+export default async function InstrumentsPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.role !== "TRADER") redirect("/app");
+
+  const instruments = await prisma.instrument.findMany({
+    where: { ownerId: session.id },
+    include: {
+      applications: { where: { status: { in: ["SUBMITTED", "ASSIGNED", "SCHEDULED"] } } },
+      certificates: { orderBy: { issuedAt: "desc" }, take: 1 },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return (
+    <div>
+      <div className="flex justify-between items-center gap-3">
+        <h1 className="font-display text-3xl">Instruments</h1>
+        <Link href="/app/instruments/new" className="btn btn-primary">
+          Register instrument
+        </Link>
+      </div>
+      <div className="space-y-3 mt-6">
+        {instruments.map((i) => {
+          const open = i.applications.length > 0;
+          const type = i.status === "UNVERIFIED" ? "FIRST" : "REVERIFICATION";
+          return (
+            <article key={i.id} className="card p-5">
+              <div className="flex flex-wrap justify-between gap-3">
+                <div>
+                  <p className="font-semibold">
+                    {i.make} {i.model} · {i.serialNumber}
+                  </p>
+                  <p className="text-sm text-[var(--muted)]">
+                    {i.category} class {i.accuracyClass} · {i.capacity}
+                  </p>
+                  <p className="text-sm">{i.premisesName}</p>
+                  <p className="text-xs text-[var(--muted)] mt-1">
+                    Valid until {formatDate(i.validUntil)}
+                    {daysUntil(i.validUntil) !== null ? ` (${daysUntil(i.validUntil)} days)` : ""}
+                  </p>
+                </div>
+                <StatusBadge status={i.status} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {!open ? <ApplyButton instrumentId={i.id} type={type} /> : <StatusBadge status="SUBMITTED" />}
+                {i.certificates[0] ? (
+                  <Link
+                    href={`/verify/${encodeURIComponent(i.certificates[0].certificateNo)}`}
+                    className="btn btn-ghost py-2 text-sm"
+                  >
+                    View certificate
+                  </Link>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
