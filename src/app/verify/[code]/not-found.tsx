@@ -1,13 +1,14 @@
-import { PublicFooter, PublicHeader } from "@/components/public";
+import { PublicFooter, PublicHeader, PageBanner } from "@/components/public";
 
 export default function NotFound() {
   return (
     <div>
-      <PublicHeader />
-      <main className="mx-auto max-w-xl px-5 py-16">
-        <h1 className="font-display text-3xl">Certificate not found</h1>
-        <p className="mt-3 text-[var(--muted)]">
-          No verification certificate matches that number. Check the QR code or application status.
+      <PublicHeader search />
+      <PageBanner title="Certificate not found" crumbs="Home / Know Your Certificate" />
+      <main id="main-content" className="gov-wrap max-w-xl py-12">
+        <p className="text-[var(--muted)]">
+          No verification certificate matches that number in the MaapSetu repository. Please check
+          the QR code or contact the circle office.
         </p>
       </main>
       <PublicFooter />

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { PublicFooter, PublicHeader, StatusBadge } from "@/components/public";
+import { PublicFooter, PublicHeader, StatusBadge, PageBanner } from "@/components/public";
 import { daysUntil, formatDate } from "@/lib/utils";
 
 export default async function VerifyCertificatePage({
@@ -26,53 +26,51 @@ export default async function VerifyCertificatePage({
 
   return (
     <div>
-      <PublicHeader />
-      <main className="mx-auto max-w-3xl px-5 py-10">
-        <div className={`rounded-2xl p-4 mb-6 ${valid ? "bg-emerald-50" : "bg-red-50"}`}>
-          <p className="text-sm uppercase tracking-wide font-semibold">
-            {valid ? "Valid for use in trade" : "Expired — do not use in trade"}
+      <PublicHeader search />
+      <PageBanner title="Certificate authentication" crumbs="Home / Know Your Certificate / Result" />
+      <main id="main-content" className="gov-wrap max-w-4xl py-10">
+        <div className={`border-l-4 p-4 mb-6 ${valid ? "border-[var(--forest)] bg-emerald-50" : "border-[var(--goi-red)] bg-red-50"}`}>
+          <p className="text-sm uppercase tracking-wide font-bold">
+            {valid ? "Valid for use in trade / protection" : "Expired — not valid for trade"}
           </p>
-          <h1 className="font-display text-3xl mt-1">{certificate.certificateNo}</h1>
+          <h2 className="text-2xl font-bold mt-1">{certificate.certificateNo}</h2>
         </div>
         <div className="card p-6 grid md:grid-cols-[1fr_180px] gap-6">
-          <div className="space-y-3 text-sm">
-            <Row label="Instrument" value={`${certificate.instrument.make} ${certificate.instrument.model}`} />
-            <Row label="Serial" value={certificate.instrument.serialNumber} />
-            <Row label="Category / class" value={`${certificate.instrument.category} · Class ${certificate.instrument.accuracyClass}`} />
-            <Row label="Premises" value={certificate.instrument.premisesName} />
-            <Row label="District" value={`${certificate.instrument.district}, ${certificate.instrument.owner.state}`} />
-            <Row label="Issued" value={formatDate(certificate.issuedAt)} />
-            <Row label="Valid until" value={formatDate(certificate.validUntil)} />
-            <Row
-              label="Inspected by"
-              value={certificate.application.inspection?.officer.name || "—"}
-            />
-            <Row label="Result" value={certificate.application.inspection?.result || "PASS"} />
-            <div>
-              <p className="text-[var(--muted)]">Integrity hash</p>
-              <p className="font-mono text-[11px] break-all mt-1">{certificate.integrityHash}</p>
-            </div>
-            <StatusBadge status={valid ? "VERIFIED" : "EXPIRED"} />
-          </div>
+          <table className="w-full text-sm">
+            <tbody>
+              {[
+                ["Instrument", `${certificate.instrument.make} ${certificate.instrument.model}`],
+                ["Serial number", certificate.instrument.serialNumber],
+                ["Category / class", `${certificate.instrument.category} · Class ${certificate.instrument.accuracyClass}`],
+                ["Premises", certificate.instrument.premisesName],
+                ["District / State", `${certificate.instrument.district}, ${certificate.instrument.owner.state}`],
+                ["Issued on", formatDate(certificate.issuedAt)],
+                ["Valid until", formatDate(certificate.validUntil)],
+                ["Inspected by", certificate.application.inspection?.officer.name || "—"],
+                ["Result", certificate.application.inspection?.result || "PASS"],
+              ].map(([k, v]) => (
+                <tr key={k} className="border-b">
+                  <th className="py-2 pr-4 text-left font-medium text-[var(--muted)] w-44">{k}</th>
+                  <td className="py-2 font-semibold">{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           <div className="text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={certificate.qrPayload} alt="Certificate QR" className="mx-auto w-40 h-40" />
-            <Link href={`/verify/${encodeURIComponent(certificate.certificateNo)}/print`} className="btn btn-ghost mt-3 w-full">
+            <img src={certificate.qrPayload} alt="Certificate QR" className="mx-auto w-40 h-40 border" />
+            <StatusBadge status={valid ? "VERIFIED" : "EXPIRED"} />
+            <Link
+              href={`/verify/${encodeURIComponent(certificate.certificateNo)}/print`}
+              className="btn btn-ghost mt-3 w-full"
+            >
               Print / PDF
             </Link>
+            <p className="font-mono text-[10px] break-all mt-3 text-[var(--muted)]">{certificate.integrityHash}</p>
           </div>
         </div>
       </main>
       <PublicFooter />
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[var(--muted)]">{label}</p>
-      <p className="font-medium">{value}</p>
     </div>
   );
 }

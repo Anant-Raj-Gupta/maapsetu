@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #10233d;
-  --navy-2: #1a3456;
-  --saffron: #d97706;
-  --forest: #0f6b4c;
-  --cream: #f4efe4;
-  --paper: #fbf8f2;
-  --ink: #1c1915;
-  --muted: #6b6258;
-  --line: #e4d9c8;
+  --navy: #0b3a82;
+  --navy-2: #082c64;
+  --hero: #07152c;
+  --saffron: #ff9933;
+  --forest: #138808;
+  --goi-red: #c4161c;
+  --cream: #f4f7fb;
+  --paper: #f3f6fa;
+  --ink: #1b2430;
+  --muted: #5c6b7a;
+  --line: #d5dee8;
+}
+
+html[data-font="sm"] {
+  font-size: 14px;
+}
+html[data-font="lg"] {
+  font-size: 18px;
 }
 
 * {
@@ -23,28 +32,44 @@ body {
 }
 
 body {
-  font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
+  font-family: var(--font-sans), "Noto Sans", "Segoe UI", sans-serif;
 }
 
 .font-display {
-  font-family: var(--font-display), "Source Serif 4", Georgia, serif;
+  font-family: var(--font-sans), "Noto Sans", sans-serif;
+  font-weight: 700;
+}
+
+.gov-wrap {
+  width: min(1180px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.utility-bar {
+  background: #051229;
+  color: #fff;
+}
+
+.india-stripe {
+  height: 4px;
+  background: linear-gradient(90deg, #ff9933 0 33.33%, #ffffff 33.33% 66.66%, #138808 66.66% 100%);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border-radius: 999px;
-  padding: 0.15rem 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  border-radius: 2px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .badge-ok {
-  background: #e6f4ec;
-  color: #0f6b4c;
+  background: #e8f6ee;
+  color: #0d6b32;
 }
 
 .badge-bad {
@@ -58,15 +83,14 @@ body {
 }
 
 .badge-neutral {
-  background: #ece7dd;
-  color: #4b4339;
+  background: #e8eef6;
+  color: #0b3a82;
 }
 
 .card {
   background: white;
   border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: 0 1px 0 rgba(16, 35, 61, 0.04);
+  border-radius: 6px;
 }
 
 .btn {
@@ -74,10 +98,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  border-radius: 0.7rem;
-  padding: 0.65rem 1rem;
-  font-weight: 600;
-  font-size: 0.92rem;
+  border-radius: 2px;
+  padding: 0.65rem 1.05rem;
+  font-weight: 700;
+  font-size: 0.9rem;
   transition: 0.15s ease;
 }
 
@@ -91,8 +115,12 @@ body {
 }
 
 .btn-accent {
-  background: var(--saffron);
+  background: var(--goi-red);
   color: white;
+}
+
+.btn-accent:hover {
+  background: #a51318;
 }
 
 .btn-ghost {
@@ -103,27 +131,89 @@ body {
 
 .field {
   width: 100%;
-  border: 1px solid #d7ccbb;
-  border-radius: 0.7rem;
+  border: 1px solid #c5d0dc;
+  border-radius: 2px;
   padding: 0.7rem 0.8rem;
   background: white;
   outline: none;
 }
 
 .field:focus {
-  border-color: #1a3456;
-  box-shadow: 0 0 0 3px rgba(26, 52, 86, 0.12);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(11, 58, 130, 0.15);
 }
 
 label.lbl {
   display: block;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--muted);
   margin-bottom: 0.3rem;
 }
 
-.india-stripe {
-  height: 4px;
-  background: linear-gradient(90deg, #ff9933 0 33%, #ffffff 33% 66%, #138808 66% 100%);
+.hero-gov {
+  position: relative;
+  color: white;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 42%),
+    linear-gradient(180deg, #0a2a5c 0%, #07152c 72%);
+}
+
+.hero-search {
+  display: flex;
+  width: min(760px, 100%);
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hero-search input {
+  flex: 1;
+  border: 0;
+  padding: 0.95rem 1rem;
+  color: #1b2430;
+  outline: none;
+}
+
+.hero-search button {
+  background: var(--goi-red);
+  color: #fff;
+  font-weight: 700;
+  padding: 0 1.4rem;
+  border: 0;
+}
+
+.chip {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #fff;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 2px;
+}
+
+.page-banner {
+  background: var(--navy);
+  color: white;
+  padding: 1.4rem 0;
+}
+
+.stat-bar {
+  background: white;
+  border-bottom: 1px solid var(--line);
+}
+
+.red-panel {
+  background: var(--goi-red);
+  color: white;
+}
+
+.site-footer {
+  background: #0b1f44;
+  color: #d7e2f3;
+}
+
+.crumb {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.8);
 }

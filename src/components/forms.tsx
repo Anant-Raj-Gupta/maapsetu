@@ -357,24 +357,37 @@ export function PrintButton() {
   );
 }
 
-export function VerifySearch() {
+export function VerifySearch({ variant = "default" }: { variant?: "default" | "hero" }) {
   const router = useRouter();
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const value = String(new FormData(e.currentTarget).get("code") || "");
+    if (value) router.push(`/verify/${encodeURIComponent(value.trim())}`);
+  };
+
+  if (variant === "hero") {
+    return (
+      <form className="hero-search" onSubmit={onSubmit}>
+        <input
+          name="code"
+          aria-label="Certificate number"
+          placeholder="Enter certificate no. / Know Your Certificate"
+          defaultValue="VC/TS/HYD/2025/00011"
+        />
+        <button type="submit">Search</button>
+      </form>
+    );
+  }
+
   return (
-    <form
-      className="flex gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const value = String(new FormData(e.currentTarget).get("code") || "");
-        if (value) router.push(`/verify/${encodeURIComponent(value.trim())}`);
-      }}
-    >
+    <form className="flex gap-0 overflow-hidden rounded-[2px] border" onSubmit={onSubmit}>
       <input
         name="code"
-        className="field"
+        className="field !rounded-none !border-0"
         placeholder="VC/TS/HYD/2025/00011"
         defaultValue="VC/TS/HYD/2025/00011"
       />
-      <button className="btn btn-primary">Verify</button>
+      <button className="btn btn-accent !rounded-none">Search</button>
     </form>
   );
 }

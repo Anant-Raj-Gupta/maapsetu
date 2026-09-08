@@ -1,28 +1,22 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import "./globals.css";
 
-const sans = IBM_Plex_Sans({
+const sans = Noto_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const display = Source_Serif_4({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
 export const metadata: Metadata = {
-  title: "MaapSetu — Legal Metrology verification",
+  title: "MaapSetu | Legal Metrology Verification Portal",
   description:
-    "Last-mile online verification, stamping and QR certificates for weighing and measuring instruments.",
+    "Government-style portal for online verification, stamping and QR certificates of weighing and measuring instruments.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable} h-full`}>
+    <html lang="en" className={`${sans.variable} h-full`}>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

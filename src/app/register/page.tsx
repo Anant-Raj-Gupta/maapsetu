@@ -1,17 +1,17 @@
 import { RegisterForm } from "@/components/forms";
-import { PublicHeader, PublicFooter } from "@/components/public";
+import { PublicHeader, PublicFooter, PageBanner } from "@/components/public";
 
 export default function RegisterPage() {
   return (
     <div>
-      <PublicHeader />
-      <main className="mx-auto max-w-2xl px-5 py-12">
-        <h1 className="font-display text-3xl text-[var(--navy)]">Register as an instrument user</h1>
-        <p className="text-sm text-[var(--muted)] mt-2 mb-6">
-          Shops, weighbridge owners and filling stations. Officers and GATCs are provisioned by the
-          department in this prototype.
+      <PublicHeader search />
+      <PageBanner title="New registration — instrument user" crumbs="Home / New Registration" />
+      <main id="main-content" className="gov-wrap max-w-3xl py-10">
+        <p className="text-sm text-[var(--muted)] mb-6">
+          For shops, weighbridge owners and filling stations. Officers and GATCs are provisioned by
+          the department in this prototype.
         </p>
-        <div className="card p-5">
+        <div className="card p-6">
           <RegisterForm />
         </div>
       </main>

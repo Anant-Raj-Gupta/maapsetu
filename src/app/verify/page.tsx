@@ -1,17 +1,25 @@
-import { PublicFooter, PublicHeader } from "@/components/public";
+import { redirect } from "next/navigation";
+import { PublicFooter, PublicHeader, PageBanner } from "@/components/public";
 import { VerifySearch } from "@/components/forms";
 
-export default function VerifyIndexPage() {
+export default async function VerifyIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  if (q?.trim()) redirect(`/verify/${encodeURIComponent(q.trim())}`);
+
   return (
     <div>
       <PublicHeader />
-      <main className="mx-auto max-w-xl px-5 py-14">
-        <h1 className="font-display text-4xl text-[var(--navy)]">Verify a stamp</h1>
-        <p className="text-[var(--muted)] mt-3 mb-6">
-          Enter the certificate number from the QR code on a weighing or measuring instrument. No
-          login required.
+      <PageBanner title="Know Your Certificate" crumbs="Home / Know Your Certificate" />
+      <main id="main-content" className="gov-wrap max-w-2xl py-10">
+        <p className="text-[var(--muted)] mb-6">
+          Enter the verification certificate number printed on the stamp / QR code. No login is
+          required for citizens.
         </p>
-        <div className="card p-5">
+        <div className="card p-6">
           <VerifySearch />
         </div>
       </main>
