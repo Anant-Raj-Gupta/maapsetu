@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { StatusBadge } from "@/components/public";
 import { AssignForm, InspectForm } from "@/components/forms";
 import { formatDateTime, rupees } from "@/lib/utils";
+import { certificatePath } from "@/lib/public-url";
 
 export default async function ApplicationDetailPage({
   params,
@@ -104,7 +105,7 @@ export default async function ApplicationDetailPage({
           <h2 className="font-display text-xl">Certificate issued</h2>
           <Link
             className="btn btn-primary mt-3"
-            href={`/verify/${encodeURIComponent(application.certificate.certificateNo)}`}
+            href={certificatePath(application.certificate.certificateNo)}
           >
             Open {application.certificate.certificateNo}
           </Link>

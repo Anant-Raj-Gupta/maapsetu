@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { StatusBadge } from "@/components/public";
 import { formatDateTime, rupees } from "@/lib/utils";
+import { certificatePath } from "@/lib/public-url";
 
 export default async function ApplicationsPage() {
   const session = await getSession();
@@ -35,6 +36,7 @@ export default async function ApplicationsPage() {
               <th>Fee</th>
               <th>Status</th>
               <th>Assigned</th>
+              <th>Certificate</th>
               <th></th>
             </tr>
           </thead>
@@ -54,6 +56,15 @@ export default async function ApplicationsPage() {
                 <td>
                   {a.assignedTo?.name || "—"}
                   <div className="text-xs">{formatDateTime(a.scheduledAt)}</div>
+                </td>
+                <td>
+                  {a.certificate ? (
+                    <Link href={certificatePath(a.certificate.certificateNo)} className="underline">
+                      {a.certificate.certificateNo}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="p-3">
                   <Link href={`/app/applications/${a.id}`} className="underline">

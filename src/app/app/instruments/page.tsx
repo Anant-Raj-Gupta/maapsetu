@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { StatusBadge } from "@/components/public";
 import { ApplyButton } from "@/components/forms";
 import { daysUntil, formatDate } from "@/lib/utils";
+import { certificatePath } from "@/lib/public-url";
 
 export default async function InstrumentsPage() {
   const session = await getSession();
@@ -54,7 +55,7 @@ export default async function InstrumentsPage() {
                 {!open ? <ApplyButton instrumentId={i.id} type={type} /> : <StatusBadge status="SUBMITTED" />}
                 {i.certificates[0] ? (
                   <Link
-                    href={`/verify/${encodeURIComponent(i.certificates[0].certificateNo)}`}
+                    href={certificatePath(i.certificates[0].certificateNo)}
                     className="btn btn-ghost py-2 text-sm"
                   >
                     View certificate

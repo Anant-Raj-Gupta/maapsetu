@@ -10,29 +10,10 @@ import {
   LogOut,
   Shield,
 } from "lucide-react";
+import { logoutAction } from "@/lib/auth-actions";
 import type { SessionUser } from "@/lib/auth";
 import { Emblem } from "@/components/emblem";
-
-const links = {
-  TRADER: [
-    { href: "/app", label: "Overview", icon: LayoutDashboard },
-    { href: "/app/instruments", label: "Instruments", icon: Scale },
-    { href: "/app/applications", label: "Applications", icon: ClipboardList },
-  ],
-  LMO: [
-    { href: "/app", label: "Field roster", icon: LayoutDashboard },
-    { href: "/app/applications", label: "Assigned jobs", icon: ClipboardList },
-  ],
-  GATC: [
-    { href: "/app", label: "Test centre", icon: LayoutDashboard },
-    { href: "/app/applications", label: "Assigned jobs", icon: ClipboardList },
-  ],
-  ADMIN: [
-    { href: "/app", label: "Control room", icon: LayoutDashboard },
-    { href: "/app/applications", label: "All applications", icon: ClipboardList },
-    { href: "/app/queue", label: "Assign work", icon: Shield },
-  ],
-};
+import { useI18n } from "@/components/i18n-provider";
 
 export function AppShell({
   user,
@@ -43,10 +24,33 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t, lang, setLang } = useI18n();
+
+  const links = {
+    TRADER: [
+      { href: "/app", label: t("dash.overview"), icon: LayoutDashboard },
+      { href: "/app/instruments", label: t("dash.instruments"), icon: Scale },
+      { href: "/app/applications", label: t("dash.applications"), icon: ClipboardList },
+    ],
+    LMO: [
+      { href: "/app", label: t("dash.fieldRoster"), icon: LayoutDashboard },
+      { href: "/app/applications", label: t("dash.assignedJobs"), icon: ClipboardList },
+    ],
+    GATC: [
+      { href: "/app", label: t("dash.testCentre"), icon: LayoutDashboard },
+      { href: "/app/applications", label: t("dash.assignedJobs"), icon: ClipboardList },
+    ],
+    ADMIN: [
+      { href: "/app", label: t("dash.controlRoom"), icon: LayoutDashboard },
+      { href: "/app/applications", label: t("dash.allApplications"), icon: ClipboardList },
+      { href: "/app/queue", label: t("dash.assignWork"), icon: Shield },
+    ],
+  };
+
   const nav = links[user.role];
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await logoutAction();
     router.push("/");
     router.refresh();
   }
@@ -60,12 +64,19 @@ export function AppShell({
             <Emblem className="h-10 w-10 shrink-0" />
             <span className="min-w-0">
               <span className="block text-[10px] uppercase tracking-wider text-[var(--muted)]">
-                Government of India · DoCA
+                {t("dash.gov")}
               </span>
-              <span className="block font-bold text-[var(--navy)] leading-tight">MaapSetu dashboard</span>
+              <span className="block font-bold text-[var(--navy)] leading-tight">{t("dash.title")}</span>
             </span>
           </Link>
-          <div className="text-right text-xs">
+          <div className="text-right text-xs flex flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={() => setLang(lang === "hi" ? "en" : "hi")}
+              className="btn btn-accent py-1 text-xs"
+            >
+              {lang === "hi" ? "English" : "हिन्दी"}
+            </button>
             <p className="font-semibold">{user.name}</p>
             <p className="text-[var(--muted)]">
               {user.role} · {user.district}
@@ -97,11 +108,11 @@ export function AppShell({
               className="flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:bg-white/10"
             >
               <QrCode size={16} />
-              Know Your Certificate
+              {t("dash.kyc")}
             </Link>
           </nav>
           <button type="button" onClick={logout} className="mt-3 flex items-center gap-2 px-3 py-2 text-xs bg-[var(--goi-red)]">
-            <LogOut size={14} /> Logout
+            <LogOut size={14} /> {t("dash.logout")}
           </button>
         </aside>
         <main id="main-content" className="p-5 lg:p-8 max-w-6xl">
