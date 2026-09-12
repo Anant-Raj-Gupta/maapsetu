@@ -9,6 +9,7 @@ import {
   QrCode,
   LogOut,
   Shield,
+  Users,
 } from "lucide-react";
 import { logoutAction } from "@/lib/auth-actions";
 import type { SessionUser } from "@/lib/auth";
@@ -44,6 +45,7 @@ export function AppShell({
       { href: "/app", label: t("dash.controlRoom"), icon: LayoutDashboard },
       { href: "/app/applications", label: t("dash.allApplications"), icon: ClipboardList },
       { href: "/app/queue", label: t("dash.assignWork"), icon: Shield },
+      { href: "/app/users", label: "User Management", icon: Users },
     ],
   };
 
@@ -58,7 +60,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[var(--paper)]">
       <div className="india-stripe" />
-      <header className="bg-white border-b">
+      <header className="bg-white border-b sticky top-0 z-50">
         <div className="flex items-center justify-between gap-3 px-4 py-2">
           <Link href="/" className="flex items-center gap-2 min-w-0">
             <Emblem className="h-10 w-10 shrink-0" />
@@ -70,13 +72,6 @@ export function AppShell({
             </span>
           </Link>
           <div className="text-right text-xs flex flex-col items-end gap-1">
-            <button
-              type="button"
-              onClick={() => setLang(lang === "hi" ? "en" : "hi")}
-              className="btn btn-accent py-1 text-xs"
-            >
-              {lang === "hi" ? "English" : "हिन्दी"}
-            </button>
             <p className="font-semibold">{user.name}</p>
             <p className="text-[var(--muted)]">
               {user.role} · {user.district}

@@ -1,22 +1,20 @@
 import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { CertificateResultView, PrintCertificateView } from "@/components/certificate-views";
-import { prisma, withPrismaRetry } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { certificateVerifyUrl } from "@/lib/public-url";
 import { daysUntil, formatDate } from "@/lib/utils";
 
 // Certificates are immutable once issued — cache for 1 hour
 const getCertificate = unstable_cache(
   async (certificateNo: string) =>
-    withPrismaRetry(() =>
-      prisma.certificate.findUnique({
-        where: { certificateNo },
-        include: {
-          instrument: { include: { owner: true } },
-          application: { include: { inspection: { include: { officer: true } } } },
-        },
-      }),
-    ),
+    prisma.certificate.findUnique({
+      where: { certificateNo },
+      include: {
+        instrument: { include: { owner: true } },
+        application: { include: { inspection: { include: { officer: true } } } },
+      },
+    }),
   ["certificate"],
   { revalidate: 3600, tags: ["certificate"] },
 );

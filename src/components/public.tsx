@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Emblem } from "@/components/emblem";
 import { MobileNav, UtilityBar } from "@/components/gov-chrome";
 import { useI18n } from "@/components/i18n-provider";
@@ -12,6 +13,21 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function PublicHeader() {
   const { t } = useI18n();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) {
+          setIsLoggedIn(true);
+          setUserName(data.user.name);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm">
       <div className="india-stripe" />
@@ -30,12 +46,25 @@ export function PublicHeader() {
           </span>
         </Link>
         <div className="flex items-center gap-3 shrink-0">
-          <Link href="/login" className="hidden lg:inline text-sm font-semibold text-[var(--navy)]">
-            {t("chrome.login")}
-          </Link>
-          <Link href="/register" className="hidden lg:inline btn btn-accent py-2 text-sm">
-            {t("chrome.register")}
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <span className="hidden lg:inline text-sm font-semibold text-[var(--navy)]">
+                Welcome, {userName}
+              </span>
+              <Link href="/app" className="hidden lg:inline btn btn-accent py-2 text-sm">
+                {t("chrome.dashboard")}
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="hidden lg:inline text-sm font-semibold text-[var(--navy)]">
+                {t("chrome.login")}
+              </Link>
+              <Link href="/register" className="hidden lg:inline btn btn-accent py-2 text-sm">
+                {t("chrome.register")}
+              </Link>
+            </>
+          )}
           <MobileNav />
         </div>
       </div>
@@ -43,9 +72,14 @@ export function PublicHeader() {
         <div className="gov-wrap flex gap-6 py-2.5 font-medium">
           <Link href="/" className="hover:underline">{t("chrome.home")}</Link>
           <Link href="/verify" className="hover:underline">{t("chrome.kyc")}</Link>
-          <Link href="/login" className="hover:underline">{t("chrome.stakeholderLogin")}</Link>
-          <Link href="/register" className="hover:underline">{t("chrome.newRegistration")}</Link>
-          <Link href="/app" className="hover:underline">{t("chrome.dashboard")}</Link>
+          {isLoggedIn ? (
+            <Link href="/app" className="hover:underline">{t("chrome.dashboard")}</Link>
+          ) : (
+            <>
+              <Link href="/login" className="hover:underline">{t("chrome.stakeholderLogin")}</Link>
+              <Link href="/register" className="hover:underline">{t("chrome.newRegistration")}</Link>
+            </>
+          )}
         </div>
       </nav>
     </header>

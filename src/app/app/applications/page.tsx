@@ -19,8 +19,30 @@ export default async function ApplicationsPage() {
 
   const applications = await prisma.application.findMany({
     where,
-    include: { instrument: { include: { owner: true } }, assignedTo: true, certificate: true },
+    include: {
+      instrument: {
+        select: {
+          serialNumber: true,
+          owner: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+      assignedTo: {
+        select: {
+          name: true,
+        },
+      },
+      certificate: {
+        select: {
+          certificateNo: true,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
   return (

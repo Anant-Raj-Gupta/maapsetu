@@ -24,7 +24,19 @@ async function TraderHome({ userId, name, lang }: { userId: string; name: string
   const t = (k: string) => translate(lang, k);
   const instruments = await prisma.instrument.findMany({
     where: { ownerId: userId },
-    include: { applications: { orderBy: { createdAt: "desc" }, take: 1 } },
+    select: {
+      id: true,
+      serialNumber: true,
+      category: true,
+      validUntil: true,
+      status: true,
+      applications: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { id: true },
+      },
+    },
+    take: 20,
   });
   const expiring = instruments.filter((i) => {
     const d = daysUntil(i.validUntil);
@@ -84,15 +96,35 @@ async function AdminHome({ lang }: { lang: Lang }) {
       }),
     ]),
     prisma.application.findMany({
-      take: 8,
+      take: 5,
       orderBy: { createdAt: "desc" },
-      include: { instrument: { include: { owner: true } }, assignedTo: true },
+      select: {
+        id: true,
+        applicationNo: true,
+        status: true,
+        scheduledAt: true,
+        instrument: {
+          select: {
+            serialNumber: true,
+            owner: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        assignedTo: {
+          select: {
+            name: true,
+          },
+        },
+      },
     }),
   ]);
 
   return (
     <div>
-      <h1 className="font-display text-3xl">{lang === "hi" ? "हैदराबाद नियंत्रण कक्ष" : "Hyderabad control room"}</h1>
+      <h1 className="font-display text-3xl">{lang === "hi" ? "नियंत्रण कक्ष" : "Control Room"}</h1>
       <p className="text-[var(--muted)] mt-1">{t("dash.adminSubtitle")}</p>
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-6">
         <Stat label={t("dash.statUnassigned")} value={submitted} warn />
@@ -155,8 +187,21 @@ async function OfficerHome({
   const t = (k: string) => translate(lang, k);
   const jobs = await prisma.application.findMany({
     where: { assignedToId: userId },
-    include: { instrument: true },
+    select: {
+      id: true,
+      status: true,
+      feeAmount: true,
+      scheduledAt: true,
+      instrument: {
+        select: {
+          premisesName: true,
+          category: true,
+          serialNumber: true,
+        },
+      },
+    },
     orderBy: { scheduledAt: "asc" },
+    take: 20,
   });
   const open = jobs.filter((j) => ["ASSIGNED", "SCHEDULED", "IN_PROGRESS"].includes(j.status));
 

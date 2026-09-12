@@ -109,7 +109,18 @@ function TricolourMini() {
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { t } = useI18n();
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        setIsLoggedIn(!!data.user);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="lg:hidden">
       <button type="button" className="p-2 text-[var(--navy)]" onClick={() => setOpen((v) => !v)} aria-label={t("chrome.menu")}>
@@ -121,15 +132,20 @@ export function MobileNav() {
             <Link href="/verify" onClick={() => setOpen(false)}>
               {t("chrome.kyc")}
             </Link>
-            <Link href="/login" onClick={() => setOpen(false)}>
-              {t("chrome.officerUserLogin")}
-            </Link>
-            <Link href="/register" onClick={() => setOpen(false)}>
-              {t("chrome.newRegistration")}
-            </Link>
-            <Link href="/app" onClick={() => setOpen(false)}>
-              {t("chrome.dashboard")}
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/app" onClick={() => setOpen(false)}>
+                {t("chrome.dashboard")}
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setOpen(false)}>
+                  {t("chrome.officerUserLogin")}
+                </Link>
+                <Link href="/register" onClick={() => setOpen(false)}>
+                  {t("chrome.newRegistration")}
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       ) : null}

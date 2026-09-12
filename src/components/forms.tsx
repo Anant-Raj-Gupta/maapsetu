@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { loginAction, registerAction } from "@/lib/auth-actions";
 import { DEMO_ACCOUNTS, INSTRUMENT_CATALOGUE } from "@/lib/constants";
 import { useI18n } from "@/components/i18n-provider";
+import { getAllDistricts, getStateForDistrict } from "@/lib/india-locations";
 
 export function LoginForm() {
   const { t } = useI18n();
@@ -77,6 +78,23 @@ export function RegisterForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [districtInput, setDistrictInput] = useState("");
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [autoState, setAutoState] = useState("");
+
+  const allDistricts = getAllDistricts();
+  const filteredDistricts = allDistricts.filter((d) =>
+    d.toLowerCase().startsWith(districtInput.toLowerCase())
+  );
+
+  function handleDistrictSelect(district: string) {
+    setSelectedDistrict(district);
+    setDistrictInput(district);
+    setShowDistrictDropdown(false);
+    const state = getStateForDistrict(district);
+    setAutoState(state || "");
+  }
 
   async function onSubmit(formData: FormData) {
     setError("");
@@ -125,13 +143,44 @@ export function RegisterForm() {
         <label className="lbl">{t("register.organisation")}</label>
         <input name="organisation" required className="field" />
       </div>
-      <div>
+      <div className="relative">
         <label className="lbl">{t("register.district")}</label>
-        <input name="district" required className="field" defaultValue="Hyderabad" />
+        <input
+          name="district"
+          required
+          className="field"
+          value={districtInput}
+          onChange={(e) => {
+            setDistrictInput(e.target.value);
+            setShowDistrictDropdown(true);
+          }}
+          onFocus={() => setShowDistrictDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDistrictDropdown(false), 200)}
+        />
+        {showDistrictDropdown && filteredDistricts.length > 0 && (
+          <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 max-h-60 overflow-auto rounded shadow-lg">
+            {filteredDistricts.map((district, index) => (
+              <div
+                key={`${district}-${index}`}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                onClick={() => handleDistrictSelect(district)}
+              >
+                {district}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div>
         <label className="lbl">{t("register.state")}</label>
-        <input name="state" required className="field" defaultValue="Telangana" />
+        <input
+          name="state"
+          required
+          className="field"
+          value={autoState}
+          onChange={(e) => setAutoState(e.target.value)}
+          placeholder="Auto-filled from district"
+        />
       </div>
       {error ? <p className="sm:col-span-2 text-sm text-red-700">{error}</p> : null}
       <button className="btn btn-primary sm:col-span-2">{t("register.submit")}</button>
@@ -143,14 +192,18 @@ export function InstrumentForm() {
   const { t } = useI18n();
   const router = useRouter();
   const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
 
   async function onSubmit(formData: FormData) {
+    setPending(true);
+    setError("");
     const res = await fetch("/api/instruments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(formData.entries())),
     });
     const data = await res.json();
+    setPending(false);
     if (!res.ok) {
       setError(data.error);
       return;
@@ -202,7 +255,9 @@ export function InstrumentForm() {
         <input name="lng" required className="field" defaultValue="78.486" />
       </div>
       {error ? <p className="sm:col-span-2 text-sm text-red-700">{error}</p> : null}
-      <button className="btn btn-primary sm:col-span-2">{t("dash.instrSave")}</button>
+      <button className="btn btn-primary sm:col-span-2" disabled={pending}>
+        {pending ? "Saving..." : t("dash.instrSave")}
+      </button>
     </form>
   );
 }
@@ -380,5 +435,167 @@ export function PrintButton() {
     <button type="button" onClick={() => window.print()} className="btn btn-primary mt-6 print:hidden">
       {t("print.print")}
     </button>
+  );
+}
+
+export function DeleteCertificateButton({ certificateId }: { certificateId: string }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  async function deleteCertificate() {
+    if (!confirm("Are you sure you want to delete this certificate? This action cannot be undone.")) {
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch(`/api/certificates/${certificateId}`, {
+      method: "DELETE",
+    });
+
+    setLoading(false);
+    if (res.ok) {
+      router.refresh();
+    } else {
+      alert("Failed to delete certificate");
+    }
+  }
+
+  return (
+    <button
+      onClick={deleteCertificate}
+      disabled={loading}
+      className="btn btn-ghost py-2 text-sm text-red-600 hover:text-red-700"
+    >
+      {loading ? "Deleting..." : "Delete"}
+    </button>
+  );
+}
+
+export function UserCreateForm() {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [districtInput, setDistrictInput] = useState("");
+  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [autoState, setAutoState] = useState("");
+
+  const allDistricts = getAllDistricts();
+  const filteredDistricts = allDistricts.filter((d) =>
+    d.toLowerCase().startsWith(districtInput.toLowerCase())
+  );
+
+  function handleDistrictSelect(district: string) {
+    setSelectedDistrict(district);
+    setDistrictInput(district);
+    setShowDistrictDropdown(false);
+    const state = getStateForDistrict(district);
+    setAutoState(state || "");
+  }
+
+  async function onSubmit(formData: FormData) {
+    setError("");
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(formData.entries())),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Failed to create user");
+      return;
+    }
+    router.push("/app/users");
+    router.refresh();
+  }
+
+  return (
+    <form action={onSubmit} className="grid gap-3 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <label className="lbl">Name</label>
+        <input name="name" required className="field" />
+      </div>
+      <div>
+        <label className="lbl">Email</label>
+        <input name="email" type="email" required className="field" />
+      </div>
+      <div>
+        <label className="lbl">Password</label>
+        <div className="relative">
+          <input name="password" type={showPw ? "text" : "password"} required className="field pr-10" />
+          <button
+            type="button"
+            onClick={() => setShowPw((v) => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--navy)]"
+            aria-label={showPw ? "Hide password" : "Show password"}
+          >
+            {showPw ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            )}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label className="lbl">Phone</label>
+        <input name="phone" required className="field" />
+      </div>
+      <div>
+        <label className="lbl">Role</label>
+        <select name="role" className="field" required>
+          <option value="TRADER">Trader (Business)</option>
+          <option value="LMO">LMO (Inspector)</option>
+          <option value="GATC">GATC (Test Centre)</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+      <div>
+        <label className="lbl">Organisation (Optional)</label>
+        <input name="organisation" className="field" />
+      </div>
+      <div className="relative">
+        <label className="lbl">District</label>
+        <input
+          name="district"
+          required
+          className="field"
+          value={districtInput}
+          onChange={(e) => {
+            setDistrictInput(e.target.value);
+            setShowDistrictDropdown(true);
+          }}
+          onFocus={() => setShowDistrictDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDistrictDropdown(false), 200)}
+        />
+        {showDistrictDropdown && filteredDistricts.length > 0 && (
+          <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 max-h-60 overflow-auto rounded shadow-lg">
+            {filteredDistricts.map((district, index) => (
+              <div
+                key={`${district}-${index}`}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                onClick={() => handleDistrictSelect(district)}
+              >
+                {district}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div>
+        <label className="lbl">State</label>
+        <input
+          name="state"
+          required
+          className="field"
+          value={autoState}
+          onChange={(e) => setAutoState(e.target.value)}
+          placeholder="Auto-filled from district"
+        />
+      </div>
+      {error ? <p className="sm:col-span-2 text-sm text-red-700">{error}</p> : null}
+      <button className="btn btn-primary sm:col-span-2">Create User</button>
+    </form>
   );
 }

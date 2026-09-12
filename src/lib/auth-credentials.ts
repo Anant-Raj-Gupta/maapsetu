@@ -18,6 +18,17 @@ const registerSchema = z.object({
   state: z.string().min(2),
 });
 
+const adminRegisterSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+  phone: z.string().min(8),
+  organisation: z.string().optional(),
+  district: z.string().min(2),
+  state: z.string().min(2),
+  role: z.enum(["TRADER", "LMO", "GATC", "ADMIN"]),
+});
+
 export async function loginWithPassword(email: string, password: string) {
   const parsed = loginSchema.safeParse({ email, password });
   if (!parsed.success) {
@@ -26,6 +37,15 @@ export async function loginWithPassword(email: string, password: string) {
 
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      district: true,
+      state: true,
+      passwordHash: true,
+    },
   });
   if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return { ok: false as const, status: 401, error: "Email or password is incorrect" };
@@ -50,7 +70,7 @@ export async function registerTrader(input: Record<string, unknown>) {
   }
 
   const email = parsed.data.email.toLowerCase();
-  const exists = await prisma.user.findUnique({ where: { email } });
+  const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (exists) {
     return { ok: false as const, status: 409, error: "An account already exists with this email" };
   }
@@ -62,6 +82,13 @@ export async function registerTrader(input: Record<string, unknown>) {
       email,
       passwordHash: await hashPassword(password),
       role: "TRADER",
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      district: true,
+      state: true,
     },
   });
 
@@ -75,4 +102,29 @@ export async function registerTrader(input: Record<string, unknown>) {
   });
 
   return { ok: true as const };
+}
+
+export async function registerUser(input: Record<string, unknown>) {
+  const parsed = adminRegisterSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false as const, status: 400, error: "Please fill every field correctly" };
+  }
+
+  const email = parsed.data.email.toLowerCase();
+  const exists = await prisma.user.findUnique({ where: { email } });
+  if (exists) {
+    return { ok: false as const, status: 409, error: "An account already exists with this email" };
+  }
+
+  const { password, ...profile } = parsed.data;
+  const user = await prisma.user.create({
+    data: {
+      ...profile,
+      email,
+      passwordHash: await hashPassword(password),
+      role: parsed.data.role,
+    },
+  });
+
+  return { ok: true as const, user };
 }
