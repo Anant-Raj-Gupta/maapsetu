@@ -79,8 +79,8 @@ export function AppShell({
           </div>
         </div>
       </header>
-      <div className="min-h-[calc(100vh-58px)] grid lg:grid-cols-[230px_1fr]">
-        <aside className="bg-[var(--navy)] text-white px-3 py-4 flex flex-col">
+      <div className="flex" style={{ minHeight: "calc(100vh - 58px)" }}>
+        <aside className="bg-[var(--navy)] text-white px-3 py-4 flex flex-col w-[230px] shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto">
           <nav className="space-y-1 flex-1">
             {nav.map((item) => {
               const active = pathname === item.href;
@@ -110,7 +110,7 @@ export function AppShell({
             <LogOut size={14} /> {t("dash.logout")}
           </button>
         </aside>
-        <main id="main-content" className="p-5 lg:p-8 max-w-6xl">
+        <main id="main-content" className="p-5 lg:p-8 max-w-6xl flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

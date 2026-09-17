@@ -7,6 +7,7 @@ import { AutoAssignButton } from "@/components/forms";
 import { daysUntil, formatDate, formatDateTime, rupees } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { parseLang, translate, type Lang } from "@/lib/i18n";
+import { cached } from "@/lib/cache";
 
 export default async function AppHome() {
   const session = await getSession();
@@ -22,22 +23,24 @@ export default async function AppHome() {
 
 async function TraderHome({ userId, name, lang }: { userId: string; name: string; lang: Lang }) {
   const t = (k: string) => translate(lang, k);
-  const instruments = await prisma.instrument.findMany({
-    where: { ownerId: userId },
-    select: {
-      id: true,
-      serialNumber: true,
-      category: true,
-      validUntil: true,
-      status: true,
-      applications: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { id: true },
+  const instruments = await cached(`trader:${userId}`, 15_000, () =>
+    prisma.instrument.findMany({
+      where: { ownerId: userId },
+      select: {
+        id: true,
+        serialNumber: true,
+        category: true,
+        validUntil: true,
+        status: true,
+        applications: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { id: true },
+        },
       },
-    },
-    take: 20,
-  });
+      take: 20,
+    })
+  );
   const expiring = instruments.filter((i) => {
     const d = daysUntil(i.validUntil);
     return d !== null && d <= 30;
@@ -85,42 +88,53 @@ async function TraderHome({ userId, name, lang }: { userId: string; name: string
 
 async function AdminHome({ lang }: { lang: Lang }) {
   const t = (k: string) => translate(lang, k);
-  const [[submitted, assigned, certified, failed, expiring], recent] = await Promise.all([
-    Promise.all([
-      prisma.application.count({ where: { status: "SUBMITTED" } }),
-      prisma.application.count({ where: { status: { in: ["ASSIGNED", "SCHEDULED", "IN_PROGRESS"] } } }),
-      prisma.application.count({ where: { status: "CERTIFIED" } }),
-      prisma.application.count({ where: { status: "FAILED" } }),
-      prisma.instrument.count({
-        where: { validUntil: { lte: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30) } },
-      }),
-    ]),
-    prisma.application.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        applicationNo: true,
-        status: true,
-        scheduledAt: true,
-        instrument: {
-          select: {
-            serialNumber: true,
-            owner: {
-              select: {
-                name: true,
+  const { submitted, assigned, certified, failed, expiring, recent } = await cached("admin-dash", 15_000, async () => {
+    const [countsRaw, recent] = await Promise.all([
+      prisma.$queryRaw<[{ submitted: bigint; assigned: bigint; certified: bigint; failed: bigint; expiring: bigint }]>`
+        SELECT
+          COUNT(*) FILTER (WHERE "Application"."status" = 'SUBMITTED') AS submitted,
+          COUNT(*) FILTER (WHERE "Application"."status" IN ('ASSIGNED','SCHEDULED','IN_PROGRESS')) AS assigned,
+          COUNT(*) FILTER (WHERE "Application"."status" = 'CERTIFIED') AS certified,
+          COUNT(*) FILTER (WHERE "Application"."status" = 'FAILED') AS failed,
+          (SELECT COUNT(*) FROM "Instrument" WHERE "validUntil" <= NOW() + INTERVAL '30 days') AS expiring
+        FROM "Application"
+      `,
+      prisma.application.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          applicationNo: true,
+          status: true,
+          scheduledAt: true,
+          instrument: {
+            select: {
+              serialNumber: true,
+              owner: {
+                select: {
+                  name: true,
+                },
               },
             },
           },
-        },
-        assignedTo: {
-          select: {
-            name: true,
+          assignedTo: {
+            select: {
+              name: true,
+            },
           },
         },
-      },
-    }),
-  ]);
+      }),
+    ]);
+    const c = countsRaw[0];
+    return {
+      submitted: Number(c.submitted),
+      assigned: Number(c.assigned),
+      certified: Number(c.certified),
+      failed: Number(c.failed),
+      expiring: Number(c.expiring),
+      recent,
+    };
+  });
 
   return (
     <div>
@@ -185,24 +199,26 @@ async function OfficerHome({
   lang: Lang;
 }) {
   const t = (k: string) => translate(lang, k);
-  const jobs = await prisma.application.findMany({
-    where: { assignedToId: userId },
-    select: {
-      id: true,
-      status: true,
-      feeAmount: true,
-      scheduledAt: true,
-      instrument: {
-        select: {
-          premisesName: true,
-          category: true,
-          serialNumber: true,
+  const jobs = await cached(`officer:${userId}`, 15_000, () =>
+    prisma.application.findMany({
+      where: { assignedToId: userId },
+      select: {
+        id: true,
+        status: true,
+        feeAmount: true,
+        scheduledAt: true,
+        instrument: {
+          select: {
+            premisesName: true,
+            category: true,
+            serialNumber: true,
+          },
         },
       },
-    },
-    orderBy: { scheduledAt: "asc" },
-    take: 20,
-  });
+      orderBy: { scheduledAt: "asc" },
+      take: 20,
+    })
+  );
   const open = jobs.filter((j) => ["ASSIGNED", "SCHEDULED", "IN_PROGRESS"].includes(j.status));
 
   return (

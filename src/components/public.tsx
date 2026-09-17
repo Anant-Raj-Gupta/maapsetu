@@ -54,6 +54,18 @@ export function PublicHeader() {
               <Link href="/app" className="hidden lg:inline btn btn-accent py-2 text-sm">
                 {t("chrome.dashboard")}
               </Link>
+              <form action="/app" method="POST" className="hidden lg:inline">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    window.location.href = "/";
+                  }}
+                  className="btn py-2 text-sm border border-[var(--navy)] text-[var(--navy)] hover:bg-[var(--navy)] hover:text-white"
+                >
+                  Logout
+                </button>
+              </form>
             </>
           ) : (
             <>

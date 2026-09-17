@@ -5,7 +5,9 @@ import { getSession } from "@/lib/auth";
 import { StatusBadge } from "@/components/public";
 import { formatDateTime, rupees } from "@/lib/utils";
 import { certificatePath } from "@/lib/public-url";
+import { cached } from "@/lib/cache";
 
+export const revalidate = 15;
 export default async function ApplicationsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -17,33 +19,35 @@ export default async function ApplicationsPage() {
         ? {}
         : { assignedToId: session.id };
 
-  const applications = await prisma.application.findMany({
-    where,
-    include: {
-      instrument: {
-        select: {
-          serialNumber: true,
-          owner: {
-            select: {
-              name: true,
+  const applications = await cached(`apps:${session.id}`, 15_000, () =>
+    prisma.application.findMany({
+      where,
+      include: {
+        instrument: {
+          select: {
+            serialNumber: true,
+            owner: {
+              select: {
+                name: true,
+              },
             },
           },
         },
-      },
-      assignedTo: {
-        select: {
-          name: true,
+        assignedTo: {
+          select: {
+            name: true,
+          },
+        },
+        certificate: {
+          select: {
+            certificateNo: true,
+          },
         },
       },
-      certificate: {
-        select: {
-          certificateNo: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    })
+  );
 
   return (
     <div>
@@ -80,7 +84,7 @@ export default async function ApplicationsPage() {
                   <div className="text-xs">{formatDateTime(a.scheduledAt)}</div>
                 </td>
                 <td>
-                  {a.certificate ? (
+                  {a.certificate?.certificateNo ? (
                     <Link href={certificatePath(a.certificate.certificateNo)} className="underline">
                       {a.certificate.certificateNo}
                     </Link>

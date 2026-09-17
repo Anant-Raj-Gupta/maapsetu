@@ -6,38 +6,42 @@ import { StatusBadge } from "@/components/public";
 import { ApplyButton, DeleteCertificateButton } from "@/components/forms";
 import { daysUntil, formatDate } from "@/lib/utils";
 import { certificatePath } from "@/lib/public-url";
+import { cached } from "@/lib/cache";
 
+export const revalidate = 15;
 export default async function InstrumentsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "TRADER") redirect("/app");
 
-  const instruments = await prisma.instrument.findMany({
-    where: { ownerId: session.id },
-    select: {
-      id: true,
-      make: true,
-      model: true,
-      serialNumber: true,
-      category: true,
-      accuracyClass: true,
-      capacity: true,
-      premisesName: true,
-      validUntil: true,
-      status: true,
-      applications: {
-        where: { status: { in: ["SUBMITTED", "ASSIGNED", "SCHEDULED"] } },
-        select: { id: true },
+  const instruments = await cached(`instr:${session.id}`, 15_000, () =>
+    prisma.instrument.findMany({
+      where: { ownerId: session.id },
+      select: {
+        id: true,
+        make: true,
+        model: true,
+        serialNumber: true,
+        category: true,
+        accuracyClass: true,
+        capacity: true,
+        premisesName: true,
+        validUntil: true,
+        status: true,
+        applications: {
+          where: { status: { in: ["SUBMITTED", "ASSIGNED", "SCHEDULED"] } },
+          select: { id: true },
+        },
+        certificates: {
+          orderBy: { issuedAt: "desc" },
+          take: 1,
+          select: { certificateNo: true, id: true },
+        },
       },
-      certificates: {
-        orderBy: { issuedAt: "desc" },
-        take: 1,
-        select: { certificateNo: true, id: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    })
+  );
 
   return (
     <div>

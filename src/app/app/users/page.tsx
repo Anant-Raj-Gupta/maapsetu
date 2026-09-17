@@ -22,6 +22,7 @@ export default async function UsersPage() {
       createdAt: true,
     },
     orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return <UserManagement users={users} />;
