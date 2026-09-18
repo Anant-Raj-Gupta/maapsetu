@@ -34,12 +34,35 @@ export async function POST(
   const observedError = String(form.get("observedError") || "");
   const notes = String(form.get("notes") || "");
   const standardUsed = String(form.get("standardUsed") || "");
+  const referenceSerialNo = String(form.get("referenceSerialNo") || "").trim();
+  const instrumentMatchStatus = String(form.get("instrumentMatchStatus") || "").trim();
   const lat = Number(form.get("lat") || application.instrument.lat);
   const lng = Number(form.get("lng") || application.instrument.lng);
   const photo = form.get("photo");
 
   if (result !== "PASS" && result !== "FAIL") {
     return NextResponse.json({ error: "Result must be PASS or FAIL" }, { status: 400 });
+  }
+
+  if (referenceSerialNo && !/^\d{9}$/.test(referenceSerialNo)) {
+    return NextResponse.json(
+      { error: "Reference serial number must be exactly 9 digits" },
+      { status: 400 },
+    );
+  }
+
+  if (result === "PASS" && !referenceSerialNo) {
+    return NextResponse.json(
+      { error: "Reference instrument serial number is required for approval" },
+      { status: 400 },
+    );
+  }
+
+  if (!instrumentMatchStatus || (instrumentMatchStatus !== "MATCH" && instrumentMatchStatus !== "MISMATCH")) {
+    return NextResponse.json(
+      { error: "Instrument match confirmation is required" },
+      { status: 400 },
+    );
   }
 
   let photoPath: string | undefined;
@@ -64,6 +87,8 @@ export async function POST(
       observedError,
       notes,
       photoPath,
+      referenceSerialNo: referenceSerialNo || null,
+      instrumentMatchStatus,
       lat,
       lng,
     },

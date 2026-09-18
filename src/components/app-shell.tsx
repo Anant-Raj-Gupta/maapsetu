@@ -10,6 +10,7 @@ import {
   LogOut,
   Shield,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 import { logoutAction } from "@/lib/auth-actions";
 import type { SessionUser } from "@/lib/auth";
@@ -32,6 +33,7 @@ export function AppShell({
       { href: "/app", label: t("dash.overview"), icon: LayoutDashboard },
       { href: "/app/instruments", label: t("dash.instruments"), icon: Scale },
       { href: "/app/applications", label: t("dash.applications"), icon: ClipboardList },
+      { href: "/app/complaints", label: "Complaints", icon: AlertTriangle },
     ],
     LMO: [
       { href: "/app", label: t("dash.fieldRoster"), icon: LayoutDashboard },
@@ -43,8 +45,10 @@ export function AppShell({
     ],
     ADMIN: [
       { href: "/app", label: t("dash.controlRoom"), icon: LayoutDashboard },
+      { href: "/app/registry", label: "Instrument Registry", icon: Scale },
       { href: "/app/applications", label: t("dash.allApplications"), icon: ClipboardList },
       { href: "/app/queue", label: t("dash.assignWork"), icon: Shield },
+      { href: "/app/officer-complaints", label: "Officer Complaints", icon: AlertTriangle },
       { href: "/app/users", label: "User Management", icon: Users },
     ],
   };

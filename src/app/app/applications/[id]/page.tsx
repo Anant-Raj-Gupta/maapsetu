@@ -26,6 +26,8 @@ export default async function ApplicationDetailPage({
         status: true,
         feeAmount: true,
         assignedToId: true,
+        systemSerialNo: true,
+        instrumentPhotoUrl: true,
         scheduledAt: true,
         remarks: true,
         instrument: {
@@ -129,6 +131,8 @@ export default async function ApplicationDetailPage({
             applicationId={application.id}
             lat={application.instrument.lat}
             lng={application.instrument.lng}
+            instrumentPhotoUrl={application.instrumentPhotoUrl}
+            systemSerialNo={application.systemSerialNo}
           />
         </section>
       ) : null}

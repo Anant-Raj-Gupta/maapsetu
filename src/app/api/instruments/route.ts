@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { catalogueFor } from "@/lib/constants";
 
-const schema = z.object({
-  category: z.string(),
-  serialNumber: z.string().min(3),
-  make: z.string().min(2),
-  model: z.string().min(1),
-  capacity: z.string().min(1),
-  premisesName: z.string().min(2),
-  address: z.string().min(4),
-  lat: z.coerce.number(),
-  lng: z.coerce.number(),
-});
+function generate9DigitSerial(): string {
+  return Math.floor(100000000 + Math.random() * 900000000).toString();
+}
+
+async function uniqueInstrumentSerial(): Promise<string> {
+  for (let i = 0; i < 10; i++) {
+    const serial = generate9DigitSerial();
+    const exists = await prisma.instrument.findFirst({
+      where: { serialNumber: serial },
+    });
+    if (!exists) return serial;
+  }
+  throw new Error("Could not generate unique serial after 10 attempts");
+}
 
 export async function GET() {
   const session = await getSession();
@@ -35,19 +39,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only instrument users can register devices" }, { status: 403 });
   }
 
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) {
+  const form = await request.formData();
+  const category = String(form.get("category") || "");
+  const make = String(form.get("make") || "");
+  const model = String(form.get("model") || "");
+  const capacity = String(form.get("capacity") || "");
+  const premisesName = String(form.get("premisesName") || "");
+  const address = String(form.get("address") || "");
+  const lat = Number(form.get("lat") || 0);
+  const lng = Number(form.get("lng") || 0);
+  const photo = form.get("instrumentPhoto");
+
+  if (!category || !make || !model || !capacity || !premisesName || !address) {
     return NextResponse.json({ error: "Check instrument details" }, { status: 400 });
   }
 
-  const catalogue = catalogueFor(parsed.data.category);
+  if (!(photo instanceof File) || photo.size === 0) {
+    return NextResponse.json({ error: "Instrument photo is required" }, { status: 400 });
+  }
+
+  const catalogue = catalogueFor(category);
   if (!catalogue) {
     return NextResponse.json({ error: "Unsupported instrument category" }, { status: 400 });
   }
 
+  // Save instrument photo
+  const bytes = Buffer.from(await photo.arrayBuffer());
+  const uploads = path.join(process.cwd(), "public", "uploads");
+  await mkdir(uploads, { recursive: true });
+  const filename = `instr-photo-${Date.now()}${path.extname(photo.name) || ".jpg"}`;
+  await writeFile(path.join(uploads, filename), bytes);
+  const photoUrl = `/uploads/${filename}`;
+
+  // Auto-generate serial number
+  const serialNumber = await uniqueInstrumentSerial();
+
   const instrument = await prisma.instrument.create({
     data: {
-      ...parsed.data,
+      category,
+      serialNumber,
+      photoUrl,
+      make,
+      model,
+      capacity,
+      premisesName,
+      address,
+      lat,
+      lng,
       ownerId: session.id,
       accuracyClass: catalogue.accuracyClass,
       district: session.district,

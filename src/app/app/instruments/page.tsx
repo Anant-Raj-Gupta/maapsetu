@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { StatusBadge } from "@/components/public";
-import { ApplyButton, DeleteCertificateButton } from "@/components/forms";
+import { ApplyForm, DeleteCertificateButton } from "@/components/forms";
 import { daysUntil, formatDate } from "@/lib/utils";
 import { certificatePath } from "@/lib/public-url";
 import { cached } from "@/lib/cache";
@@ -74,7 +74,7 @@ export default async function InstrumentsPage() {
                 <StatusBadge status={i.status} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {!open ? <ApplyButton instrumentId={i.id} type={type} /> : <StatusBadge status="SUBMITTED" />}
+                {!open ? <ApplyForm instrumentId={i.id} type={type} /> : <StatusBadge status="SUBMITTED" />}
                 {i.certificates[0] ? (
                   <>
                     <Link
