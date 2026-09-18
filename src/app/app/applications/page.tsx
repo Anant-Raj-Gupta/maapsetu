@@ -84,9 +84,9 @@ export default async function ApplicationsPage() {
                   <div className="text-xs">{formatDateTime(a.scheduledAt)}</div>
                 </td>
                 <td>
-                  {a.certificate?.certificateNo ? (
-                    <Link href={certificatePath(a.certificate.certificateNo)} className="underline">
-                      {a.certificate.certificateNo}
+                  {a.certificate.length > 0 ? (
+                    <Link href={certificatePath(a.certificate[0].certificateNo)} className="underline">
+                      {a.certificate[0].certificateNo}
                     </Link>
                   ) : (
                     "—"

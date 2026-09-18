@@ -6,12 +6,13 @@ export const dynamic = "force-dynamic";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const params = await context.params;
 
   try {
     await prisma.certificate.delete({

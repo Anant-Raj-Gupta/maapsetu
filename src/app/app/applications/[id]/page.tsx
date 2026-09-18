@@ -153,14 +153,14 @@ export default async function ApplicationDetailPage({
         </section>
       ) : null}
 
-      {application.certificate ? (
+      {application.certificate.length > 0 ? (
         <section className="card p-5">
           <h2 className="font-display text-xl">Certificate issued</h2>
           <Link
             className="btn btn-primary mt-3"
-            href={certificatePath(application.certificate.certificateNo)}
+            href={certificatePath(application.certificate[0].certificateNo)}
           >
-            Open {application.certificate.certificateNo}
+            Open {application.certificate[0].certificateNo}
           </Link>
         </section>
       ) : null}
