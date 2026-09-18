@@ -14,7 +14,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [https://maapsetusihwinners.vercel.app/](https://maapsetusihwinners.vercel.app/).
 
 ### Demo accounts
 
