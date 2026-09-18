@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { cookies } from "next/headers";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import type { Role } from "./constants";
 
 const COOKIE = "maapsetu_token";
@@ -19,7 +19,7 @@ function secret() {
 }
 
 export async function hashPassword(password: string) {
-  const rounds = process.env.NODE_ENV === "development" ? 4 : 8;
+  const rounds = 10;
   return bcrypt.hash(password, rounds);
 }
 

@@ -16,74 +16,76 @@ export default async function ApplicationDetailPage({
   if (!session) redirect("/login");
   const { id } = await params;
 
-  const application = await prisma.application.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      applicationNo: true,
-      type: true,
-      status: true,
-      feeAmount: true,
-      assignedToId: true,
-      scheduledAt: true,
-      remarks: true,
-      instrument: {
-        select: {
-          make: true,
-          model: true,
-          serialNumber: true,
-          category: true,
-          accuracyClass: true,
-          premisesName: true,
-          address: true,
-          lat: true,
-          lng: true,
-          owner: {
-            select: {
-              name: true,
-              phone: true,
+  const [application, officers] = await Promise.all([
+    prisma.application.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        applicationNo: true,
+        type: true,
+        status: true,
+        feeAmount: true,
+        assignedToId: true,
+        scheduledAt: true,
+        remarks: true,
+        instrument: {
+          select: {
+            make: true,
+            model: true,
+            serialNumber: true,
+            category: true,
+            accuracyClass: true,
+            premisesName: true,
+            address: true,
+            lat: true,
+            lng: true,
+            owner: {
+              select: {
+                name: true,
+                phone: true,
+              },
             },
           },
         },
-      },
-      assignedTo: {
-        select: {
-          name: true,
-          role: true,
+        assignedTo: {
+          select: {
+            name: true,
+            role: true,
+          },
         },
-      },
-      inspection: {
-        select: {
-          result: true,
-          standardUsed: true,
-          maxPermissibleError: true,
-          observedError: true,
-          notes: true,
-          photoPath: true,
-          lat: true,
-          lng: true,
-          inspectedAt: true,
-          officer: {
-            select: {
-              name: true,
+        inspection: {
+          select: {
+            result: true,
+            standardUsed: true,
+            maxPermissibleError: true,
+            observedError: true,
+            notes: true,
+            photoPath: true,
+            lat: true,
+            lng: true,
+            inspectedAt: true,
+            officer: {
+              select: {
+                name: true,
+              },
             },
           },
         },
-      },
-      certificate: {
-        select: {
-          certificateNo: true,
+        certificate: {
+          select: {
+            certificateNo: true,
+          },
         },
       },
-    },
-  });
-  if (!application) notFound();
+    }),
+    prisma.user.findMany({
+      where: { role: { in: ["LMO", "GATC"] } },
+      select: { id: true, name: true, role: true },
+      take: 50,
+    })
+  ]);
 
-  const officers = await prisma.user.findMany({
-    where: { role: { in: ["LMO", "GATC"] } },
-    select: { id: true, name: true, role: true },
-    take: 50,
-  });
+  if (!application) notFound();
 
   const canInspect =
     (session.role === "LMO" || session.role === "GATC") &&
