@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { catalogueFor } from "@/lib/constants";
 import { nextApplicationNo } from "@/lib/certificates";
 import { invalidateCache } from "@/lib/cache";
-
-const schema = z.object({
-  instrumentId: z.string(),
-  type: z.enum(["FIRST", "REVERIFICATION"]),
-});
 
 export async function GET() {
   const session = await getSession();
@@ -42,13 +36,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only instrument users can apply" }, { status: 403 });
   }
 
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) {
+  const form = await request.formData();
+  const instrumentId = String(form.get("instrumentId") || "");
+  const type = String(form.get("type") || "");
+
+  if (!instrumentId || (type !== "FIRST" && type !== "REVERIFICATION")) {
     return NextResponse.json({ error: "Invalid application" }, { status: 400 });
   }
 
   const instrument = await prisma.instrument.findFirst({
-    where: { id: parsed.data.instrumentId, ownerId: session.id },
+    where: { id: instrumentId, ownerId: session.id },
   });
   if (!instrument) {
     return NextResponse.json({ error: "Instrument not found" }, { status: 404 });
@@ -65,13 +62,17 @@ export async function POST(request: Request) {
   }
 
   const catalogue = catalogueFor(instrument.category);
+
+  // Reuse the instrument's serial number and photo — no duplicate generation
   const application = await prisma.application.create({
     data: {
       applicationNo: await nextApplicationNo(),
       instrumentId: instrument.id,
-      type: parsed.data.type,
+      type,
       status: "SUBMITTED",
       feeAmount: catalogue?.fee ?? 200,
+      systemSerialNo: instrument.serialNumber,
+      instrumentPhotoUrl: instrument.photoUrl,
     },
   });
 
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
       action: "APPLICATION_SUBMITTED",
       entity: "Application",
       entityId: application.id,
-      detail: `${application.applicationNo} fee ₹${application.feeAmount} (demo payment captured)`,
+      detail: `${application.applicationNo} serial ${instrument.serialNumber} fee ₹${application.feeAmount} (demo payment captured)`,
     },
   });
 

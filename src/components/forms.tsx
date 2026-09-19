@@ -193,14 +193,14 @@ export function InstrumentForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [successSerial, setSuccessSerial] = useState("");
 
   async function onSubmit(formData: FormData) {
     setPending(true);
     setError("");
     const res = await fetch("/api/instruments", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(formData.entries())),
+      body: formData,
     });
     const data = await res.json();
     setPending(false);
@@ -208,8 +208,32 @@ export function InstrumentForm() {
       setError(data.error);
       return;
     }
+    setSuccessSerial(data.instrument.serialNumber);
+  }
+
+  function closeModal() {
+    setSuccessSerial("");
     router.push("/app/instruments");
     router.refresh();
+  }
+
+  if (successSerial) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2 className="text-xl font-bold text-[var(--navy)]">Instrument Registered!</h2>
+          <p className="text-sm text-[var(--muted)]">Your auto-generated instrument serial number is:</p>
+          <p className="text-3xl font-mono font-bold tracking-widest text-[var(--forest)] bg-[var(--cream)] py-3 px-4 rounded-xl border-2 border-dashed border-[var(--forest)]">
+            {successSerial}
+          </p>
+          <p className="text-xs text-[var(--muted)]">Please save this number for your records. It uniquely identifies your instrument in the system.</p>
+          <button onClick={closeModal} className="btn btn-primary w-full">Done</button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -222,9 +246,16 @@ export function InstrumentForm() {
           ))}
         </select>
       </div>
-      <div>
-        <label className="lbl">{t("dash.instrSerial")}</label>
-        <input name="serialNumber" required className="field" />
+      <div className="sm:col-span-2">
+        <label className="lbl">Instrument photograph <span className="text-red-600">*</span></label>
+        <input
+          name="instrumentPhoto"
+          type="file"
+          accept="image/*"
+          required
+          className="field"
+        />
+        <p className="text-xs text-[var(--muted)] mt-1">Take a clear photo of the instrument showing its nameplate. A serial number will be auto-generated.</p>
       </div>
       <div>
         <label className="lbl">{t("dash.instrMake")}</label>
@@ -262,29 +293,48 @@ export function InstrumentForm() {
   );
 }
 
-export function ApplyButton({ instrumentId, type }: { instrumentId: string; type: "FIRST" | "REVERIFICATION" }) {
+export function ApplyForm({ instrumentId, type }: { instrumentId: string; type: "FIRST" | "REVERIFICATION" }) {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  async function apply() {
+  async function onSubmit() {
+    setPending(true);
+    setError("");
+    const formData = new FormData();
+    formData.append("instrumentId", instrumentId);
+    formData.append("type", type);
     const res = await fetch("/api/applications", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ instrumentId, type }),
+      body: formData,
     });
     const data = await res.json();
+    setPending(false);
     if (!res.ok) {
       setError(data.error);
       return;
     }
-    router.push("/app/applications");
-    router.refresh();
+    setSuccess(true);
+    setTimeout(() => {
+      router.push("/app/applications");
+      router.refresh();
+    }, 1500);
+  }
+
+  if (success) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Application submitted!
+      </span>
+    );
   }
 
   return (
     <div>
-      <button onClick={apply} className="btn btn-accent py-2 text-sm">
-        Apply {type === "FIRST" ? "first verification" : "re-verification"}
+      <button onClick={onSubmit} disabled={pending} className="btn btn-accent py-2 text-sm">
+        {pending ? "Submitting…" : `Apply ${type === "FIRST" ? "first verification" : "re-verification"}`}
       </button>
       {error ? <p className="text-xs text-red-700 mt-1">{error}</p> : null}
     </div>
@@ -356,10 +406,14 @@ export function InspectForm({
   applicationId,
   lat,
   lng,
+  instrumentPhotoUrl,
+  systemSerialNo,
 }: {
   applicationId: string;
   lat: number;
   lng: number;
+  instrumentPhotoUrl?: string | null;
+  systemSerialNo?: string | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -389,7 +443,37 @@ export function InspectForm({
 
   return (
     <form action={onSubmit} className="space-y-3">
+      {/* Instrument verification panel — photo + serial from application */}
+      {(instrumentPhotoUrl || systemSerialNo) && (
+        <div className="rounded-xl border-2 border-[var(--accent)] bg-amber-50 p-4 space-y-3">
+          <h3 className="font-display text-lg text-[var(--navy)]">Instrument Verification</h3>
+          {systemSerialNo && (
+            <div>
+              <p className="text-xs text-[var(--muted)] mb-1">System Serial No.</p>
+              <p className="text-2xl font-mono font-bold tracking-widest text-[var(--forest)] bg-white py-2 px-3 rounded-lg border border-[var(--border)] inline-block">
+                {systemSerialNo}
+              </p>
+            </div>
+          )}
+          {instrumentPhotoUrl && (
+            <div>
+              <p className="text-xs text-[var(--muted)] mb-1">Instrument photo submitted by applicant</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={instrumentPhotoUrl} alt="Instrument submitted by applicant" className="max-h-64 rounded-lg border border-[var(--border)]" />
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
+          <label className="lbl">Does the instrument in front of you match the photo above? <span className="text-red-600">*</span></label>
+          <select name="instrumentMatchStatus" className="field" required>
+            <option value="">— Select —</option>
+            <option value="MATCH">Yes — instrument matches the submitted photo</option>
+            <option value="MISMATCH">No — instrument does NOT match the submitted photo</option>
+          </select>
+        </div>
         <div>
           <label className="lbl">Result</label>
           <select name="result" className="field" required>
@@ -408,6 +492,20 @@ export function InspectForm({
         <div className="sm:col-span-2">
           <label className="lbl">Observations</label>
           <textarea name="notes" required className="field min-h-24" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="lbl">Reference instrument serial no. <span className="text-red-600">*</span></label>
+          <input
+            name="referenceSerialNo"
+            required
+            className="field"
+            placeholder="123456789"
+            pattern="\d{9}"
+            title="Must be exactly 9 digits"
+            inputMode="numeric"
+            maxLength={9}
+          />
+          <p className="text-xs text-[var(--muted)] mt-1">Enter the 9-digit serial number of the certified reference instrument used for this verification.</p>
         </div>
         <div className="sm:col-span-2">
           <label className="lbl">Site photograph</label>

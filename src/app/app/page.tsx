@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { StatusBadge } from "@/components/public";
 import { AutoAssignButton } from "@/components/forms";
+import { ClusterMapModal } from "@/components/cluster-map-modal";
 import { daysUntil, formatDate, formatDateTime, rupees } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import { parseLang, translate, type Lang } from "@/lib/i18n";
@@ -226,7 +227,10 @@ async function OfficerHome({
       <h1 className="font-display text-3xl">
         {role === "GATC" ? t("dash.testCentreRoster") : t("dash.fieldRosterOf")} — {name}
       </h1>
-      <p className="text-[var(--muted)] mt-1">{open.length} {t("dash.openJobs")}.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-4">
+        <p className="text-[var(--muted)]">{open.length} {t("dash.openJobs")}.</p>
+        <ClusterMapModal />
+      </div>
       <div className="space-y-3 mt-6">
         {jobs.map((job) => (
           <Link key={job.id} href={`/app/applications/${job.id}`} className="card p-4 block hover:border-[var(--navy)]">

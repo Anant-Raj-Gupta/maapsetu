@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { StatusBadge } from "@/components/public";
 import { AssignForm, AutoAssignButton } from "@/components/forms";
+import { ClusterMapModal } from "@/components/cluster-map-modal";
 
 export default async function QueuePage() {
   const session = await getSession();
@@ -23,8 +24,9 @@ export default async function QueuePage() {
   return (
     <div>
       <h1 className="font-display text-3xl">Assignment queue</h1>
-      <div className="mt-4">
+      <div className="mt-4 flex gap-4 items-center">
         <AutoAssignButton />
+        <ClusterMapModal />
       </div>
       <div className="space-y-4 mt-6">
         {pending.length === 0 ? (
