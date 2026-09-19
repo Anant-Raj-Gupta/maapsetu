@@ -297,12 +297,12 @@ export function ApplyForm({ instrumentId, type }: { instrumentId: string; type: 
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [successSerial, setSuccessSerial] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  async function onSubmit(formData: FormData) {
+  async function onSubmit() {
     setPending(true);
     setError("");
+    const formData = new FormData();
     formData.append("instrumentId", instrumentId);
     formData.append("type", type);
     const res = await fetch("/api/applications", {
@@ -315,67 +315,29 @@ export function ApplyForm({ instrumentId, type }: { instrumentId: string; type: 
       setError(data.error);
       return;
     }
-    setSuccessSerial(data.application.systemSerialNo);
+    setSuccess(true);
+    setTimeout(() => {
+      router.push("/app/applications");
+      router.refresh();
+    }, 1500);
   }
 
-  function closeModal() {
-    setSuccessSerial("");
-    setShowForm(false);
-    router.push("/app/applications");
-    router.refresh();
-  }
-
-  if (successSerial) {
+  if (success) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <h2 className="text-xl font-bold text-[var(--navy)]">Application Submitted!</h2>
-          <p className="text-sm text-[var(--muted)]">Your system-generated serial number is:</p>
-          <p className="text-3xl font-mono font-bold tracking-widest text-[var(--forest)] bg-[var(--cream)] py-3 px-4 rounded-xl border-2 border-dashed border-[var(--forest)]">
-            {successSerial}
-          </p>
-          <p className="text-xs text-[var(--muted)]">Please save this number for your records. It will be used for all future references to this application.</p>
-          <button onClick={closeModal} className="btn btn-primary w-full">Done</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!showForm) {
-    return (
-      <button onClick={() => setShowForm(true)} className="btn btn-accent py-2 text-sm">
-        Apply {type === "FIRST" ? "first verification" : "re-verification"}
-      </button>
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Application submitted!
+      </span>
     );
   }
 
   return (
-    <form action={onSubmit} className="space-y-3 rounded-xl border border-[var(--border)] p-4 bg-[var(--cream)]">
-      <p className="text-sm font-semibold text-[var(--navy)]">Upload instrument photo to proceed</p>
-      <div>
-        <label className="lbl">Instrument photograph <span className="text-red-600">*</span></label>
-        <input
-          name="instrumentPhoto"
-          type="file"
-          accept="image/*"
-          required
-          className="field"
-        />
-        <p className="text-xs text-[var(--muted)] mt-1">Take a clear photo of the instrument showing its nameplate/serial plate.</p>
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" className="btn btn-primary text-sm" disabled={pending}>
-          {pending ? "Submitting…" : "Submit application"}
-        </button>
-        <button type="button" onClick={() => setShowForm(false)} className="btn btn-ghost text-sm">
-          Cancel
-        </button>
-      </div>
-      {error ? <p className="text-xs text-red-700">{error}</p> : null}
-    </form>
+    <div>
+      <button onClick={onSubmit} disabled={pending} className="btn btn-accent py-2 text-sm">
+        {pending ? "Submitting…" : `Apply ${type === "FIRST" ? "first verification" : "re-verification"}`}
+      </button>
+      {error ? <p className="text-xs text-red-700 mt-1">{error}</p> : null}
+    </div>
   );
 }
 

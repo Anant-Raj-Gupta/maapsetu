@@ -52,7 +52,7 @@ export default async function ComplaintsPage() {
                   <div className="flex justify-between items-start gap-4 mb-2">
                     <div>
                       <p className="font-semibold text-[var(--navy)]">Against: {c.targetOfficer.name} ({c.targetOfficer.role})</p>
-                      <p className="text-xs text-gray-500 mt-0.5">App Serial: <span className="font-mono">{c.applicationSerial}</span></p>
+                      <p className="text-xs text-gray-500 mt-0.5">Instrument S/N: <span className="font-mono">{c.applicationSerial}</span></p>
                     </div>
                     {c.status === "CLEARED" ? (
                       <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">CLEARED</span>

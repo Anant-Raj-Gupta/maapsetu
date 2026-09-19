@@ -19,12 +19,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Serial number must be exactly 9 digits." }, { status: 400 });
     }
 
-    const applicationExists = await prisma.application.findUnique({
-      where: { systemSerialNo: applicationSerial }
+    // Look up by instrument serial number (primary) or application systemSerialNo (backward compat)
+    const instrument = await prisma.instrument.findFirst({
+      where: { serialNumber: applicationSerial, ownerId: session.id },
+    });
+
+    const applicationExists = await prisma.application.findFirst({
+      where: {
+        OR: [
+          { systemSerialNo: applicationSerial },
+          ...(instrument ? [{ instrumentId: instrument.id }] : []),
+        ],
+      },
     });
 
     if (!applicationExists) {
-      return NextResponse.json({ error: "Invalid Application Serial No. No such application exists." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid Instrument Serial No. No matching application found." }, { status: 400 });
     }
 
     const complaint = await prisma.complaint.create({
@@ -42,3 +52,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

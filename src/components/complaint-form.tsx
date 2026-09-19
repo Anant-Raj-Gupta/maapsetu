@@ -56,7 +56,7 @@ export function ComplaintForm({ officers }: { officers: { id: string, name: stri
       </div>
 
       <div>
-        <label className="block text-sm font-semibold mb-1">Unique Application Serial No.</label>
+        <label className="block text-sm font-semibold mb-1">Instrument Serial No.</label>
         <input 
           type="text" 
           name="applicationSerial" 

@@ -24,14 +24,6 @@ export default async function RegistryPage() {
           district: true,
         },
       },
-      applications: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: {
-          systemSerialNo: true,
-          applicationNo: true,
-        },
-      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -47,7 +39,7 @@ export default async function RegistryPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="p-3 font-semibold">System Serial No (Auto)</th>
+              <th className="p-3 font-semibold">Instrument Serial No.</th>
               <th className="p-3 font-semibold">Instrument details</th>
               <th className="p-3 font-semibold">Owner</th>
               <th className="p-3 font-semibold">Verification Status</th>
@@ -55,24 +47,18 @@ export default async function RegistryPage() {
           </thead>
           <tbody className="divide-y">
             {instruments.map((i) => {
-              const systemSerial = i.applications[0]?.systemSerialNo;
               return (
                 <tr key={i.id} className="hover:bg-gray-50">
                   <td className="p-3 align-top">
-                    {systemSerial ? (
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-[var(--navy)] font-semibold">
-                        {systemSerial}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 italic">Not generated</span>
-                    )}
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded text-[var(--navy)] font-semibold">
+                      {i.serialNumber}
+                    </span>
                   </td>
                   <td className="p-3 align-top">
                     <p className="font-semibold text-[var(--navy)]">
                       {i.make} {i.model}
                     </p>
                     <p className="text-gray-500 text-xs">Category: {i.category}</p>
-                    <p className="text-gray-500 text-xs mt-1">Manual S/N: {i.serialNumber}</p>
                   </td>
                   <td className="p-3 align-top">
                     <p>{i.owner.name}</p>
@@ -98,3 +84,4 @@ export default async function RegistryPage() {
     </div>
   );
 }
+
