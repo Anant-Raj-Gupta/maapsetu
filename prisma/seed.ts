@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { createHash } from "crypto";
 import QRCode from "qrcode";
 import { certificateVerifyUrl } from "../src/lib/public-url";
